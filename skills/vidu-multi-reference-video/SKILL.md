@@ -31,12 +31,18 @@ The total reference count for normal reference generation is usually 1-7 across 
 
 Use saved Vidu subjects by default when they exist.
 
+- Build one normalized visible-subject list from the script, storyboard, and nearby scene context before writing the prompt.
+- Subjects discovered from script context must be referenced the same way as subjects listed in the storyboard. If a saved Vidu subject exists, pass it as `--material` and write it as `[@name]` in the prompt body.
+- Do not add a script-derived visible character, prop, monster, weapon, skill, vehicle, UI, or scene as plain text when a matching Vidu subject exists.
+- If a visible subject has no saved subject and no raw image mapping, stop and ask before submission.
 - Put `[@name]` directly in the body sentence wherever the subject appears.
 - Do not only place subject names in a final tag list.
 - Do not hide all subjects inside a long `参考关系` paragraph when the same token can be used in `场景`, `人物`, `道具`, `特效`, or `动作时间轴`.
 - The token must exactly match the `--material` name.
 - Use tokens for scenes, characters, monsters, props, weapons, vehicles, skills, effects, UI panels, and important objects.
 - With subject tokens, skip long repeated appearance descriptions. Add only short state words when useful.
+- Once a subject has a `[@name]` token, use that exact token for every mention. Do not mix `[@name]` with the same subject written as ordinary text.
+- Do not replace visible subjects with third-person pronouns or vague references such as `他`, `她`, `它`, `其`, `对方`, `这个人`, `那个人`, `她身上`, `他手里`. Repeat the exact subject token instead.
 
 Good:
 
@@ -51,6 +57,15 @@ Bad:
 
 ```text
 提示词正文完全不写主体，只在最后附加：角色A 角色B 场景主体 道具主体
+人物：角色B站在旁边，[@角色A] 盯着她。
+动作时间轴：0-2秒，[@角色A] 看着对方；2-5秒，他慢慢后退。
+```
+
+Good rewrite:
+
+```text
+人物：[@角色A] 位于画面左侧中景，侧脸看向画面右侧的 [@角色B]；[@角色B] 位于画面右侧前景，身体侧对 [@角色A]。
+动作时间轴：0-2秒，[@角色A] 看向 [@角色B]；2-5秒，[@角色B] 缓慢后退。
 ```
 
 ## Raw Image Mapping
@@ -99,9 +114,19 @@ Keep prompts concise and visual. Do not paste internal checklists, long policy d
 - Keep 1-2 primary visible characters whenever possible; avoid more than 4 named visible characters.
 - Assign each character a separate screen zone and posture.
 - State who faces whom, who looks where, and who does not look at camera.
+- Use direct subject-token relationships, such as `[@角色A] 看向 [@角色B]`, `[@角色A] 侧身面对 [@角色B]`, or `[@角色A] 背对镜头看向画面右侧`.
 - Avoid overlapping faces or bodies.
 - If a character is only a reaction target, use back view, over-shoulder, silhouette, or partial body to reduce fusion.
 - For dialogue, state exactly who opens their mouth; all other visible characters should stay silent unless needed.
+
+## Gaze And Camera Staring
+
+Characters should not stare into the camera by default.
+
+- Use camera-facing or direct eye contact only when the script requires POV, direct address, selfie/live-stream framing, a character looking through a peephole/scope, or intentional fourth-wall framing.
+- Avoid `盯着镜头`, `看着镜头`, `直视镜头`, `正对镜头凝视` unless explicitly required.
+- Prefer `[@角色A] 看向 [@角色B]`, `[@角色A] 看向 [@道具主体]`, `[@角色A] 看向画面左侧门口`, or `[@角色A] 视线越过镜头看向远处`.
+- Do not write pronoun-based gaze like `角色A盯着她`; write the actual token relationship, for example `[@角色A] 看向 [@角色B]`.
 
 ## Camera And Motion
 
@@ -148,8 +173,11 @@ Before calling `vidu-cli`:
 - Nearby scene context was used to determine atmosphere continuity.
 - Visible subjects were resolved from script, not only from storyboard columns.
 - Every saved subject is passed as `--material` and appears as exact `[@name]` in the prompt body.
+- Subjects added from script reasoning are not plain text; they are also `[@name]` tokens or mapped raw images.
+- No visible subject is replaced by `他/她/它/对方/这个人/那个人` in action, gaze, spatial, or dialogue-mouth descriptions.
 - Every raw image is mapped as `参考图N`.
 - Camera angle, gaze, spatial relation, motion, and mouth-control are explicit.
+- No accidental `看镜头/盯镜头/直视镜头` wording appears unless the script explicitly requires it.
 - No `承接上一镜` or previous-video-memory wording appears.
 - No unsupported weather/color preset was copied from another project.
 - No `高饱和度` or `低饱和度` wording appears.
@@ -167,7 +195,7 @@ Vidu参数：type=character2video，model=<Q2/Q3/...>，duration=<seconds>，asp
 人物/主体：[@角色A] <位置/朝向/表情>；[@角色B] <位置/朝向/表情>。
 道具/特效：[@道具或特效主体] <与人物或动作关系>。
 镜头与机位：<景别、角度、运镜>。
-人物与空间关系：<前后左右远近、视线、是否看镜头>。
+人物与空间关系：<[@角色A] 与 [@角色B] 的前后左右远近、视线关系；默认不看镜头>。
 动作时间轴：0-2秒，<动作一>；2-5秒，<动作二>。
 台词/口型：只有 [@说话角色] 张口说话：“<台词>”；其他角色不张口。
 约束：不要真人写实，不要欧美3D，不要赛璐璐，不要额外人物，不要身份融合。

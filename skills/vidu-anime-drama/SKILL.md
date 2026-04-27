@@ -48,12 +48,17 @@ Final prompts should include only the resulting visual atmosphere phrase, not th
 
 Prefer saved Vidu subjects over raw images whenever they exist.
 
+- Build a normalized visible-subject list before writing the prompt. Include subjects from both the storyboard and the script context.
+- Any subject added from script reasoning must be resolved exactly the same way as a storyboard subject. If it has a saved Vidu subject, it must be passed as `--material` and written as `[@name]`; do not insert it as plain text.
+- If a script-derived visible subject should appear on screen but no matching saved subject or raw reference exists, stop and ask the user before generating.
 - Submit saved subjects with `--material "name:id:version"`.
 - In the prompt body, use the exact inline token `[@name]` directly inside the sentence.
 - Do not only place subject chips at the end or only list them in `参考关系`.
 - Use subject tokens for scenes, characters, monsters, props, weapons, vehicles, skills, and effects.
 - The token must exactly match the Vidu subject name passed in `--material`, including Chinese characters, spaces, punctuation, and full-width parentheses.
 - For saved subjects, do not waste prompt weight on long appearance descriptions. The token carries identity. Add only short role/state clarifiers when needed.
+- Once a subject has a token, use that exact token for all later mentions in the prompt. Do not switch between `[@name]` and plain text for the same subject.
+- Do not replace visible subjects with third-person pronouns or vague references such as `他`, `她`, `它`, `其`, `对方`, `这个人`, `那个人`, `她身上`, `他手里`. Repeat the subject token instead.
 
 Good body-embedded token patterns:
 
@@ -61,6 +66,16 @@ Good body-embedded token patterns:
 - `人物：[@角色A] 位于画面左侧前景，侧脸看向画面右侧的 [@角色B]。`
 - `道具：[@武器主体] 被 [@角色A] 双手握住，动作克制但紧张。`
 - `特效：[@技能主体] 从地面升起，挡在 [@角色A] 与 [@怪物主体] 之间。`
+
+Bad:
+
+- `人物：角色B在旁边，[@角色A] 盯着她。`
+- `动作：[@角色A] 看着对方，他慢慢后退。`
+
+Good rewrite:
+
+- `人物：[@角色A] 位于画面左侧前景，侧脸看向画面右侧的 [@角色B]。`
+- `动作：0-2秒，[@角色A] 看向 [@角色B]；2-5秒，[@角色B] 缓慢后退。`
 
 ## Raw Image Reference Rule
 
@@ -102,7 +117,13 @@ Every shot must state:
 - left/right/foreground/background relation,
 - beginning and ending action state.
 
-Characters should not look at camera unless the story explicitly requires it. Multi-character shots should keep visible named subjects to 1-4, with 1-2 primary characters whenever possible.
+Characters should not look at camera unless the story explicitly requires POV, direct address, selfie/live-stream framing, or a character intentionally facing the viewer. Multi-character shots should keep visible named subjects to 1-4, with 1-2 primary characters whenever possible.
+
+For gaze language:
+
+- Prefer `[@角色A] 看向 [@角色B]`, `[@角色A] 看向 [@道具主体]`, `[@角色A] 看向画面左侧走廊`, or `[@角色A] 视线越过镜头看向远处`.
+- Avoid `盯着镜头`, `看着镜头`, `直视镜头`, `正对镜头凝视` unless the script explicitly requires it.
+- Avoid pronoun-based gaze such as `角色A盯着她`; write `[@角色A] 看向 [@角色B]` using the actual subject tokens.
 
 ## Multi-Subject Anti-Fusion
 
@@ -134,9 +155,11 @@ Keep safety wording short and scene-specific.
 3. Resolve all visible subjects from script plus storyboard.
 4. Verify references or subject tokens for every visible subject.
 5. Prefer `--material` + inline `[@name]` for saved subjects; use `参考图N` only for raw images.
-6. Write a concise prompt using the order above.
-7. Check camera, gaze, spatial relation, motion, dialogue mouth-control, and atmosphere continuity.
-8. Submit through `vidu-skills`, poll, download, and save with the requested naming format.
+6. Check that every saved subject appears as `[@name]` every time it is mentioned; no plain-text duplicate names or pronouns should replace it.
+7. Write a concise prompt using the order above.
+8. Check camera, gaze, spatial relation, motion, dialogue mouth-control, and atmosphere continuity.
+9. Scan for accidental camera-staring wording unless the script requires it.
+10. Submit through `vidu-skills`, poll, download, and save with the requested naming format.
 
 ## Generic Prompt Skeleton
 
@@ -147,7 +170,7 @@ Keep safety wording short and scene-specific.
 人物/主体：[@角色A] 位于<位置>，<朝向/视线/状态>；[@角色B] 位于<位置>，<朝向/视线/状态>。
 道具/特效：[@道具或特效主体] <与角色或场景的关系>。
 镜头与机位：<景别>，<平视/俯视/仰视/过肩/主观视角>，<推拉摇移或静止>。
-人物与空间关系：<谁在前景/后景/左/右/近/远，谁看向谁，不看镜头>。
+人物与空间关系：<[@角色A] 在前景/后景/左/右/近/远；[@角色A] 看向 [@角色B] 或看向明确方向；默认不看镜头>。
 动作时间轴：0-2秒，<动作一>；2-5秒，<动作二>。
 台词/口型：只有 [@说话角色] 张口说话：“<台词>”；其他角色不张口。
 约束：不要真人写实，不要欧美3D，不要赛璐璐，不要额外人物，不要身份融合。
