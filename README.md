@@ -4,8 +4,8 @@ Public, sanitized Codex skills for producing anime-drama Vidu reference-to-video
 
 ## Skills
 
-- `vidu-anime-drama`: storyboard/material validation, shot planning, camera language, character-reference checks.
-- `vidu-multi-reference-video`: concise multi-reference Vidu prompt writing, anti-character-fusion staging, indoor/outdoor weather handling, moderation-safe phrasing.
+- `vidu-anime-drama`: script-first storyboard validation, scene atmosphere continuity, shot planning, camera language, and subject-reference checks.
+- `vidu-multi-reference-video`: concise multi-reference Vidu prompt writing with inline `[@subject]` tokens, anti-character-fusion staging, dialogue mouth-control, and moderation-safe phrasing.
 
 ## Pair With The Official Vidu Skill
 

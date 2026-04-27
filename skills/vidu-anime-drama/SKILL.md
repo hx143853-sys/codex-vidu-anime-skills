@@ -1,70 +1,85 @@
 ---
 name: vidu-anime-drama
-description: Use when generating Vidu anime-drama shots from storyboard sheets and material sheets. Handles character2video defaults, anime-style prompting, atmosphere continuity, explicit reference mapping, camera angle and gaze direction, multi-character spatial staging, context lookup across nearby shots, and the rule that every visible character must have a confirmed reference image.
+description: Use when generating Vidu anime/comic drama shots from any script, storyboard, and material/subject table. Enforces script-first context reading, scene/sequence atmosphere continuity, Vidu subject inline-token prompting, reference validation, camera/staging clarity, dialogue mouth-control, and safe concise prompts for reference-to-video generation.
 ---
 
 # Vidu Anime Drama Shot Skill
 
-Use this skill when the input is a script, storyboard table, material table, or exported character/scene library and the target output is Vidu reference-to-video shots.
+Use this skill when turning a script plus storyboard/materials into Vidu reference-to-video shots. It must work for any series or genre, not one fixed project.
 
-Pair with an execution skill for actual Vidu CLI submission and downloads. This skill is for planning, validation, and prompt writing.
+## Core Rules
 
-## Non-Negotiables
+- Default task type is `character2video`.
+- Default model is `Q2 / 3.1` unless the user chooses another model.
+- Minimum duration is `5s`; increase duration for long dialogue or complex movement.
+- Default output is `16:9`, `1080p`, `h264`, no audio unless the user says otherwise.
+- Use the style requested by the user or project. For anime projects, prefer `日系动漫风格`, `二次元手绘动画质感`. Do not use `赛璐璐`.
+- Read the script and storyboard before generating. Never rely only on the storyboard row.
+- Never write prompts as if Vidu has seen the previous generated clip. Do not use `承接上一镜`, `延续上个视频`, or `和前面一样`.
+- If any visible character/monster/prop/weapon/skill/effect lacks a confirmed reference or accepted text-only design, stop and ask the user before submission.
 
-- Default task type: `character2video`.
-- Default model: Q2 / `3.1`, unless the user requests another model.
-- Minimum duration: `5s`.
-- Default output: `16:9`, `1080p`, `h264`, no audio.
-- Base style: `日系动漫风格`. Do not use `赛璐璐`.
-- Every shot must state camera angle, camera position, character facing direction, gaze target, and spatial relationship.
-- Characters should not look at camera unless the storyboard explicitly requires it.
-- Multi-character shots should usually keep 1-2 primary characters and never exceed 4 named on-screen characters.
-- Never write prompt text as if Vidu can see previous generated clips. Do not use `承接上一镜`, `延续上个视频`, or `和前面一样`.
-- If any visible character lacks a confirmed reference image or saved Vidu subject, stop and ask the user before generation.
+## Script-First Context
 
-## Workflow
+Before writing any prompt:
 
 1. Read the target storyboard row.
-2. Read nearby rows and the source script to resolve scene state, ambiguous group labels, and who is actually visible.
-3. Match the storyboard scene to the material table scene reference.
-4. Build the visible-subject list: characters, monsters, props, effects, UI, and scene.
-5. Verify every visible character has a confirmed image or saved Vidu subject.
-6. Determine whether the shot is interior or exterior before writing weather.
-7. Write a concise, visual Vidu prompt with strong weight on scene content, camera, staging, and action.
-8. Submit with the Vidu CLI skill, save task IDs, poll, and download using `<episode>_<shot>.mp4` naming.
+2. Read the matching script passage.
+3. Read neighboring rows in the same scene or short sequence.
+4. Resolve missing or vague storyboard fields from the script, especially `出场角色`, `众人`, `怪物`, `道具`, `技能`, and off-screen speaker references.
+5. Decide what is actually visible in this shot and what is only implied or off-screen.
 
-## Reference Mapping
+The storyboard is a guide, not the only source of truth. If the storyboard omits a character, prop, monster, or action that the script clearly requires on screen, include it and reference the correct subject.
 
-When using images directly, map each reference explicitly:
+## Sequence Atmosphere Lock
 
-```text
-参考关系：参考图1是室内场景图；参考图2是角色A的形象参考图（黑色短发、制服、冷静气质）；参考图3是角色B的形象参考图（长发、虚弱幸存者气质）。
-```
+Build atmosphere from the script, not from fixed defaults.
 
-When using saved Vidu subjects, identify both the subject token and the role:
+- Determine the stable atmosphere for a continuous scene or short sequence of shots: time of day, weather, location state, emotional pressure, and lighting source.
+- Keep that atmosphere consistent across adjacent shots in the same scene unless the script clearly changes it.
+- Do not make one shot suddenly cool-toned and the next warm-toned without a story reason.
+- Do not force rain, cold tone, blue tone, mist, darkness, blood, or ruins unless the script or scene state supports it.
+- Avoid broad color-control words that distort subject colors, especially `高饱和度`, `低饱和度`, `降低饱和度`, `提高饱和度`.
+- Prefer story-grounded atmosphere words: `阴天`, `晴朗午后`, `黄昏斜光`, `清晨薄雾`, `室内顶灯`, `窗外自然光`, `压抑`, `紧张`, `暧昧误会`, `肃杀`, `安全区短暂平静`, `危机逼近`.
+- If the scene is indoors, do not describe weather occurring indoors. Only mention outdoor weather when the shot sees outside or the script makes it relevant.
 
-```text
-参考关系：@室内客厅是室内客厅场景参考；@角色A是角色A的形象参考主体（黑色短发、制服、冷静气质）；@角色B是角色B的形象参考主体（长发、虚弱幸存者气质）。
-```
+Final prompts should include only the resulting visual atmosphere phrase, not the reasoning rule.
 
-For character references, use this wording:
+## Vidu Subject Inline Token Rule
 
-- `XX的形象参考图N（外貌描述）`
-- `XX的形象参考主体（外貌描述）`
+Prefer saved Vidu subjects over raw images whenever they exist.
 
-Do not write only `XX人设图`.
+- Submit saved subjects with `--material "name:id:version"`.
+- In the prompt body, use the exact inline token `[@name]` directly inside the sentence.
+- Do not only place subject chips at the end or only list them in `参考关系`.
+- Use subject tokens for scenes, characters, monsters, props, weapons, vehicles, skills, and effects.
+- The token must exactly match the Vidu subject name passed in `--material`, including Chinese characters, spaces, punctuation, and full-width parentheses.
+- For saved subjects, do not waste prompt weight on long appearance descriptions. The token carries identity. Add only short role/state clarifiers when needed.
 
-## Prompt Shape
+Good body-embedded token patterns:
 
-Keep prompts concise and visual. The skill rules are mostly pre-submit checks, not text to paste into the prompt.
+- `场景：[@场景主体]，黄昏斜光从窗外进入，房间安静压抑。`
+- `人物：[@角色A] 位于画面左侧前景，侧脸看向画面右侧的 [@角色B]。`
+- `道具：[@武器主体] 被 [@角色A] 双手握住，动作克制但紧张。`
+- `特效：[@技能主体] 从地面升起，挡在 [@角色A] 与 [@怪物主体] 之间。`
 
-Recommended order:
+## Raw Image Reference Rule
+
+Use raw image mapping only when the reference is not a saved Vidu subject.
+
+- Map every raw image near the front of the prompt: `参考图1是...；参考图2是...`.
+- For character images, write: `XX的形象参考图N（简短外貌/服装/身份描述）`.
+- Continue using `参考图N` later in the prompt when assigning scene, character, prop, or effect roles.
+- Never write vague phrases like `参考图片` or `人设图` without mapping.
+
+## Prompt Order
+
+Use this order, but keep the final prompt concise:
 
 1. `风格`
-2. `审核安全表达` only when needed, one short phrase
-3. `氛围`
-4. `参考关系`
-5. `场景与色调`
+2. `氛围`
+3. `场景`
+4. `人物/主体`
+5. `道具/特效`
 6. `镜头与机位`
 7. `人物与空间关系`
 8. `动作时间轴`
@@ -72,46 +87,79 @@ Recommended order:
 10. `约束`
 11. `质量`
 
-Keep a typical final prompt around 400-1200 Chinese characters. Avoid long policy paragraphs, repeated negative rules, and chapter-lock explanations in the final Vidu prompt.
+Do not paste long internal rules, chapter explanations, or repeated warnings into the final Vidu prompt. Keep prompt weight on visible content, subjects, camera, spatial relation, and action.
 
-## Indoor/Outdoor Weather Rule
+## Camera And Staging
 
-This is an internal decision step.
+Every shot must state:
 
-- Interior shot (`内`): do not write that it is raining indoors. Do not add rain sound, window rain streaks, or outdoor rainy scenery unless the shot explicitly looks outside or the window/outdoor view is the subject.
-- Interior shot during a cloudy/rainy story period: write only lighting and atmosphere, such as `阴天室内冷色调，冷灰漫射光，低对比度，压抑安静`.
-- Character wetness is allowed only as character state, for example `发梢湿润，衣物湿润，地面少量水迹`.
-- Exterior shot (`外`) or shot looking outside: use `下雨`, `雨幕`, `积水`, `雨声`, and `阴天` when supported by the script.
-- Keep scene color consistent across shots; do not make only one character's shot suddenly much colder or bluer.
+- shot size,
+- camera angle,
+- camera position,
+- camera movement,
+- facing direction,
+- gaze target,
+- left/right/foreground/background relation,
+- beginning and ending action state.
 
-## Multi-Character Staging
+Characters should not look at camera unless the story explicitly requires it. Multi-character shots should keep visible named subjects to 1-4, with 1-2 primary characters whenever possible.
 
-- Place characters in separate screen zones: left/right, foreground/background, seated/standing, near/far.
-- Avoid overlapping faces and bodies.
-- If only one character is speaking, state that only that character opens their mouth.
-- If a secondary character is only a reaction target, use side-back view, over-shoulder, silhouette, or defocus.
+## Multi-Subject Anti-Fusion
 
-## Moderation-Safe Adaptation
+- Give each visible character a separate screen zone: left/right, foreground/background, seated/standing/kneeling, near/far.
+- Avoid overlapping faces, merged bodies, or vague `两人站在一起`.
+- For dialogue, state exactly who opens their mouth and who stays silent.
+- For reaction shots, use over-shoulder, back view, silhouette, or partial body when that reduces identity fusion.
 
-Handle sensitive content internally and convert it into cinematic, non-explicit visuals.
+## Dialogue And Duration
 
-- Zombie/action: use `惊悚`, `低吼`, `扑来`, `暗色污渍`, `丧尸化`; avoid graphic gore.
-- Bathroom/romance/sexualized scenes: keep characters clothed or covered, use steam, silhouette, hands, face, props, and cutaways; avoid nudity or explicit contact.
-- Do not include real public figures, living artists, private data, API keys, task IDs, or generated media URLs in prompts or public artifacts.
+- Each shot should normally have only one speaker.
+- Do not split a complete line of dialogue in a way that breaks performance unless the user asks for micro-shots.
+- If a line is long, extend duration or divide into same-scene alternate angles while keeping the full sentence segments natural.
+- Match duration to action and dialogue length; do not force every shot to the minimum when the line needs more time.
 
-## Prompt Skeleton
+## Moderation-Safe Prompting
+
+Keep safety wording short and scene-specific.
+
+- Use one compact phrase only when needed, such as `画面克制，不展示血腥细节`.
+- Avoid long policy disclaimers that bury the main visual content.
+- Rewrite graphic or sexualized wording into story-safe visual language without changing plot meaning.
+- Do not mention living artists or real public figures as style references.
+
+## Workflow
+
+1. Read script, storyboard, material table, and available Vidu subjects.
+2. Identify the current scene/sequence atmosphere from script context.
+3. Resolve all visible subjects from script plus storyboard.
+4. Verify references or subject tokens for every visible subject.
+5. Prefer `--material` + inline `[@name]` for saved subjects; use `参考图N` only for raw images.
+6. Write a concise prompt using the order above.
+7. Check camera, gaze, spatial relation, motion, dialogue mouth-control, and atmosphere continuity.
+8. Submit through `vidu-skills`, poll, download, and save with the requested naming format.
+
+## Generic Prompt Skeleton
 
 ```text
-风格：日本动漫风格，日系动漫风格，日系题材动漫风格，二次元手绘动画质感，冷色调，动漫电影大片感。
-审核安全表达：画面克制，不展示裸露和血腥细节。
-氛围：阴天室内冷色调，压抑安静，末日生存感。
-参考关系：@场景A是室内场景参考；@角色A是角色A的形象参考主体（外貌描述）；@角色B是角色B的形象参考主体（外貌描述）。
-场景与色调：保持场景A的空间结构，冷灰光线，背景简洁虚化。
-镜头与机位：中景，低机位从角色B身侧缓慢上摇到角色A方向。
-人物与空间关系：角色B坐在画面右下方，抬头看向画面左侧；角色A站在画面左侧中景，二人相距一米以上，脸部不重叠，不看镜头。
-动作时间轴：0-2秒，角色B低头喘息；2-5秒，角色B慢慢抬头，角色A静立观察。
-台词/口型：无台词，两人都不张口。
+风格：<项目指定风格>，日系动漫风格，二次元手绘动画质感。
+氛围：<根据剧本和连续镜头确定的时间/天气/情绪/光线>。
+场景：[@场景主体]，<只描述当前镜头真实可见的场景状态>。
+人物/主体：[@角色A] 位于<位置>，<朝向/视线/状态>；[@角色B] 位于<位置>，<朝向/视线/状态>。
+道具/特效：[@道具或特效主体] <与角色或场景的关系>。
+镜头与机位：<景别>，<平视/俯视/仰视/过肩/主观视角>，<推拉摇移或静止>。
+人物与空间关系：<谁在前景/后景/左/右/近/远，谁看向谁，不看镜头>。
+动作时间轴：0-2秒，<动作一>；2-5秒，<动作二>。
+台词/口型：只有 [@说话角色] 张口说话：“<台词>”；其他角色不张口。
 约束：不要真人写实，不要欧美3D，不要赛璐璐，不要额外人物，不要身份融合。
-质量：角色一致性强，空间关系清楚，构图稳定，冷色调统一，动作清晰。
+质量：主体一致性强，空间关系清楚，构图稳定，动作清晰，细节干净。
 ```
 
+## Stop And Ask
+
+Stop before generating when:
+
+- visible subjects cannot be matched to references,
+- the storyboard and script conflict in a way that changes who appears,
+- the scene atmosphere cannot be determined from script context,
+- multiple candidate subject forms exist and the correct one is ambiguous,
+- the request risks moderation failure and cannot be safely rewritten without changing meaning.
