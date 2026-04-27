@@ -54,6 +54,7 @@ Prefer saved Vidu subjects over raw images whenever they exist.
 - Submit saved subjects with `--material "name:id:version"`.
 - In the prompt body, use the exact inline token `[@name]` directly inside the sentence.
 - Do not only place subject chips at the end or only list them in `参考关系`.
+- For saved Vidu subjects, do not write identity-introduction sentences such as `[@角色A] 是角色A的形象参考主体` or `[@场景] 是室内场景参考`. The blue subject token is already the identity anchor.
 - Use subject tokens for scenes, characters, monsters, props, weapons, vehicles, skills, and effects.
 - The token must exactly match the Vidu subject name passed in `--material`, including Chinese characters, spaces, punctuation, and full-width parentheses.
 - For saved subjects, do not waste prompt weight on long appearance descriptions. The token carries identity. Add only short role/state clarifiers when needed.
@@ -62,6 +63,7 @@ Prefer saved Vidu subjects over raw images whenever they exist.
 
 Good body-embedded token patterns:
 
+- `画面主体：双人镜头，出镜人物为 [@角色A] 与 [@角色B]。`
 - `场景：[@场景主体]，黄昏斜光从窗外进入，房间安静压抑。`
 - `人物：[@角色A] 位于画面左侧前景，侧脸看向画面右侧的 [@角色B]。`
 - `道具：[@武器主体] 被 [@角色A] 双手握住，动作克制但紧张。`
@@ -69,11 +71,13 @@ Good body-embedded token patterns:
 
 Bad:
 
+- `参考关系：[@角色A] 是角色A的形象参考主体；[@角色B] 是角色B的形象参考主体。`
 - `人物：角色B在旁边，[@角色A] 盯着她。`
 - `动作：[@角色A] 看着对方，他慢慢后退。`
 
 Good rewrite:
 
+- `画面主体：双人镜头，出镜人物为 [@角色A] 与 [@角色B]。`
 - `人物：[@角色A] 位于画面左侧前景，侧脸看向画面右侧的 [@角色B]。`
 - `动作：0-2秒，[@角色A] 看向 [@角色B]；2-5秒，[@角色B] 缓慢后退。`
 
@@ -92,17 +96,39 @@ Use this order, but keep the final prompt concise:
 
 1. `风格`
 2. `氛围`
-3. `场景`
-4. `人物/主体`
-5. `道具/特效`
-6. `镜头与机位`
-7. `人物与空间关系`
-8. `动作时间轴`
-9. `台词/口型`
-10. `约束`
+3. `画面主体数量`
+4. `场景`
+5. `人物/主体`
+6. `道具/特效`
+7. `镜头与机位`
+8. `人物与空间关系`
+9. `动作时间轴`
+10. `台词/口型`
 11. `质量`
 
 Do not paste long internal rules, chapter explanations, or repeated warnings into the final Vidu prompt. Keep prompt weight on visible content, subjects, camera, spatial relation, and action.
+
+## Internal Checks Are Not Prompt Text
+
+The agent must enforce these checks while writing, but must not paste them into the final Vidu prompt by default:
+
+- Do not add a `约束` section unless the user explicitly asks for it or moderation safety requires one short phrase.
+- Do not output negative weather commands such as `不要下雨`. If rain is not visible or not supported by the script, simply omit rain language.
+- Do not output long negative lists like `不要真人写实，不要欧美3D，不要额外人物，不要身份融合`.
+- Do not output explanations of why a subject is referenced. Use subject tokens directly in the visible shot description.
+
+If a safety or quality check is needed, encode it positively in the visual description whenever possible.
+
+## Visible Cast Count
+
+Every prompt should state the visible people/creatures count near the front so Vidu understands the shot scale:
+
+- Single-person shot: `画面主体：单人镜头，出镜人物为 [@角色A]。`
+- Two-person shot: `画面主体：双人镜头，出镜人物为 [@角色A] 与 [@角色B]。`
+- Multi-person shot: `画面主体：三人镜头，出镜人物为 [@角色A]、[@角色B]、[@角色C]。`
+- Character plus monster/object: `画面主体：一人一怪镜头，出镜主体为 [@角色A] 与 [@怪物主体]。`
+
+Do not use this line to add negative constraints like `不要其他人`.
 
 ## Camera And Staging
 
@@ -156,16 +182,18 @@ Keep safety wording short and scene-specific.
 4. Verify references or subject tokens for every visible subject.
 5. Prefer `--material` + inline `[@name]` for saved subjects; use `参考图N` only for raw images.
 6. Check that every saved subject appears as `[@name]` every time it is mentioned; no plain-text duplicate names or pronouns should replace it.
-7. Write a concise prompt using the order above.
+7. Write the visible cast count line before detailed staging.
 8. Check camera, gaze, spatial relation, motion, dialogue mouth-control, and atmosphere continuity.
 9. Scan for accidental camera-staring wording unless the script requires it.
-10. Submit through `vidu-skills`, poll, download, and save with the requested naming format.
+10. Remove internal-only constraints and negative instructions from the final prompt.
+11. Submit through `vidu-skills`, poll, download, and save with the requested naming format.
 
 ## Generic Prompt Skeleton
 
 ```text
 风格：<项目指定风格>，日系动漫风格，二次元手绘动画质感。
 氛围：<根据剧本和连续镜头确定的时间/天气/情绪/光线>。
+画面主体：<单人/双人/三人/一人一怪镜头>，出镜主体为 [@主体A]、[@主体B]。
 场景：[@场景主体]，<只描述当前镜头真实可见的场景状态>。
 人物/主体：[@角色A] 位于<位置>，<朝向/视线/状态>；[@角色B] 位于<位置>，<朝向/视线/状态>。
 道具/特效：[@道具或特效主体] <与角色或场景的关系>。
@@ -173,7 +201,6 @@ Keep safety wording short and scene-specific.
 人物与空间关系：<[@角色A] 在前景/后景/左/右/近/远；[@角色A] 看向 [@角色B] 或看向明确方向；默认不看镜头>。
 动作时间轴：0-2秒，<动作一>；2-5秒，<动作二>。
 台词/口型：只有 [@说话角色] 张口说话：“<台词>”；其他角色不张口。
-约束：不要真人写实，不要欧美3D，不要赛璐璐，不要额外人物，不要身份融合。
 质量：主体一致性强，空间关系清楚，构图稳定，动作清晰，细节干净。
 ```
 

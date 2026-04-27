@@ -38,6 +38,7 @@ Use saved Vidu subjects by default when they exist.
 - Put `[@name]` directly in the body sentence wherever the subject appears.
 - Do not only place subject names in a final tag list.
 - Do not hide all subjects inside a long `参考关系` paragraph when the same token can be used in `场景`, `人物`, `道具`, `特效`, or `动作时间轴`.
+- For saved Vidu subjects, do not write identity-introduction sentences such as `[@角色A] 是角色A的形象参考主体` or `[@场景主体] 是室内场景参考`. The blue subject token is already the identity anchor.
 - The token must exactly match the `--material` name.
 - Use tokens for scenes, characters, monsters, props, weapons, vehicles, skills, effects, UI panels, and important objects.
 - With subject tokens, skip long repeated appearance descriptions. Add only short state words when useful.
@@ -47,6 +48,7 @@ Use saved Vidu subjects by default when they exist.
 Good:
 
 ```text
+画面主体：双人镜头，出镜人物为 [@角色A] 与 [@角色B]。
 场景：[@场景主体]，黄昏斜光，空气紧张。
 人物：[@角色A] 位于画面左侧中景，侧脸看向 [@角色B]；[@角色B] 在画面右侧前景背对镜头。
 道具：[@道具主体] 被 [@角色A] 握在右手，靠近胸前。
@@ -57,6 +59,7 @@ Bad:
 
 ```text
 提示词正文完全不写主体，只在最后附加：角色A 角色B 场景主体 道具主体
+参考关系：[@角色A] 是角色A的形象参考主体；[@角色B] 是角色B的形象参考主体。
 人物：角色B站在旁边，[@角色A] 盯着她。
 动作时间轴：0-2秒，[@角色A] 看着对方；2-5秒，他慢慢后退。
 ```
@@ -64,6 +67,7 @@ Bad:
 Good rewrite:
 
 ```text
+画面主体：双人镜头，出镜人物为 [@角色A] 与 [@角色B]。
 人物：[@角色A] 位于画面左侧中景，侧脸看向画面右侧的 [@角色B]；[@角色B] 位于画面右侧前景，身体侧对 [@角色A]。
 动作时间轴：0-2秒，[@角色A] 看向 [@角色B]；2-5秒，[@角色B] 缓慢后退。
 ```
@@ -97,17 +101,39 @@ Use this order for production prompts:
 
 1. `风格`
 2. `氛围`
-3. `场景`
-4. `人物/主体`
-5. `道具/特效`
-6. `镜头与机位`
-7. `人物与空间关系`
-8. `动作时间轴`
-9. `台词/口型`
-10. `约束`
+3. `画面主体数量`
+4. `场景`
+5. `人物/主体`
+6. `道具/特效`
+7. `镜头与机位`
+8. `人物与空间关系`
+9. `动作时间轴`
+10. `台词/口型`
 11. `质量`
 
 Keep prompts concise and visual. Do not paste internal checklists, long policy disclaimers, or explanations into the final prompt.
+
+## Internal Checks Are Not Prompt Text
+
+The agent must enforce quality and safety checks while writing, but must not paste them into the final Vidu prompt by default.
+
+- Do not add a `约束` section unless the user explicitly requests it or one short safety phrase is necessary.
+- Do not output negative weather commands such as `不要下雨`. If rain is not visible or not supported by the script, omit rain language.
+- Do not output long negative lists like `不要真人写实，不要欧美3D，不要额外人物，不要身份融合`.
+- Do not explain who a saved subject is. Use `[@name]` directly in scene, character, prop, action, and gaze sentences.
+
+If a check matters, express the positive visible result instead of a negative instruction.
+
+## Visible Cast Count
+
+State the visible people/creatures count near the front of every final prompt:
+
+- `画面主体：单人镜头，出镜人物为 [@角色A]。`
+- `画面主体：双人镜头，出镜人物为 [@角色A] 与 [@角色B]。`
+- `画面主体：三人镜头，出镜人物为 [@角色A]、[@角色B]、[@角色C]。`
+- `画面主体：一人一怪镜头，出镜主体为 [@角色A] 与 [@怪物主体]。`
+
+Do not turn this line into a negative constraint such as `不要其他人`.
 
 ## Multi-Subject Anti-Fusion
 
@@ -181,6 +207,10 @@ Before calling `vidu-cli`:
 - No `承接上一镜` or previous-video-memory wording appears.
 - No unsupported weather/color preset was copied from another project.
 - No `高饱和度` or `低饱和度` wording appears.
+- No `参考关系：[@name] 是...参考主体` identity-introduction sentence appears for saved subjects.
+- No default `约束` section or long negative instruction list appears in the final prompt.
+- No negative weather command such as `不要下雨` appears in the final prompt.
+- A visible cast count line such as `单人镜头`, `双人镜头`, or `一人一怪镜头` appears near the front.
 
 ## Output Format
 
@@ -191,6 +221,7 @@ Vidu参数：type=character2video，model=<Q2/Q3/...>，duration=<seconds>，asp
 提示词：
 风格：<项目风格>。
 氛围：<由剧本和连续镜头确定的氛围>。
+画面主体：<单人/双人/三人/一人一怪镜头>，出镜主体为 [@主体A]、[@主体B]。
 场景：[@场景主体]，<当前可见场景状态>。
 人物/主体：[@角色A] <位置/朝向/表情>；[@角色B] <位置/朝向/表情>。
 道具/特效：[@道具或特效主体] <与人物或动作关系>。
@@ -198,7 +229,6 @@ Vidu参数：type=character2video，model=<Q2/Q3/...>，duration=<seconds>，asp
 人物与空间关系：<[@角色A] 与 [@角色B] 的前后左右远近、视线关系；默认不看镜头>。
 动作时间轴：0-2秒，<动作一>；2-5秒，<动作二>。
 台词/口型：只有 [@说话角色] 张口说话：“<台词>”；其他角色不张口。
-约束：不要真人写实，不要欧美3D，不要赛璐璐，不要额外人物，不要身份融合。
 质量：主体一致性强，空间关系清楚，构图稳定，动作清晰，细节干净。
 ```
 
