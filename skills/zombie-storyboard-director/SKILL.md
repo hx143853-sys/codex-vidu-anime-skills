@@ -1,6 +1,6 @@
 ---
 name: zombie-storyboard-director
-description: Use when converting AI anime drama scripts, novels, outlines, or revised chapters into detailed professional storyboard tables. Produces shot-level sheets with shot number, duration, shot size, scene, characters, director-grade picture descriptions, dialogue, sound, and notes while preserving plot and dialogue. Picture descriptions should include composition, shot size, character action, camera angle/movement, and visual emphasis, but the skill must not create Vidu prompts, dynamic prompt columns, visible-subject mapping columns, saved-subject tokens, or reference-image mappings.
+description: Use when converting AI anime drama scripts, novels, outlines, or revised chapters into detailed professional storyboard tables. Produces shot-level sheets with shot number, duration, shot size, scene, independently judged visible/speaking characters, director-grade picture descriptions, dialogue, sound, and notes while preserving plot and dialogue. Picture descriptions should include current screen content, composition, shot size, character action, emotion/reaction, scene focus, camera angle/movement, and visual emphasis, but the skill must not create Vidu prompts, dynamic prompt columns, visible-subject mapping columns, saved-subject tokens, or reference-image mappings.
 ---
 
 # Zombie Storyboard Director
@@ -127,15 +127,19 @@ Example:
 
 List only characters that appear or speak in the shot.
 
+Judge `出场角色` independently for every shot from the current script beat, dialogue, and actual screen content. Do not copy the previous shot's characters, the whole chapter's cast, or every subject-table entry into every row.
+
 Use real character names. Merge `VO`, `OS`, `SO`, and inner-monologue labels into the same speaker name. Do not create `角色A VO` or `角色B OS` as separate roles.
 
 Do not force subject-table multi-form names unless the script needs that clarity. The storyboard can use normal names like `角色A` and `角色B`.
+
+If a character is only mentioned by dialogue and is not visible or speaking in the current shot, do not list that character in `出场角色`. If the shot description implies a second character is visible, include that character explicitly rather than leaving them hidden in the prose.
 
 ### 画面描述
 
 This is the most important field. It must read like a professional director's storyboard description, not a plot summary.
 
-Write what the current screen should show according to the script, including:
+Write what the current screen should show according to the script. Every `画面描述` must include the current visible content, main subject action, emotion or reaction, scene focus, and basic composition/camera information. Include:
 
 - what event is happening,
 - who is doing what,
@@ -146,6 +150,8 @@ Write what the current screen should show according to the script, including:
 - character action and reaction,
 - camera angle or simple camera movement when useful,
 - anime/film/3D/CG-style exaggeration when it strengthens the original beat.
+
+Do not write `画面描述` as a rewritten plot sentence. It should be concrete enough that a later video-prompting step can infer the real visible subjects, opening frame, motion, camera path, and ending state without guessing.
 
 The description can include professional language such as `低角度`, `俯拍`, `推近`, `拉远`, `摇镜`, `快速切入`, `压迫感构图`, `反应特写`, `背景虚化`, and `动作夸张线`.
 
@@ -313,8 +319,9 @@ Before finalizing, verify:
 - Dialogue preserves original wording and is split only at natural pauses.
 - `VO`, `OS`, and `SO` are merged into the base speaker.
 - One shot usually has one speaker and about 20 Chinese characters or less of dialogue.
+- `出场角色` is judged per shot and does not mechanically repeat previous rows or the whole cast.
 - The script's plot order is preserved.
-- `画面描述` is detailed and director-grade, including composition/action/camera information when useful.
+- `画面描述` is detailed and director-grade, including current image content, subject action, emotion/reaction, scene focus, composition, and camera information when useful.
 - `画面描述` does not contain Vidu prompt constraints, saved-subject mappings, or quality-word boilerplate.
 - The storyboard is detailed enough for later prompt generation but not padded with invented story content.
 

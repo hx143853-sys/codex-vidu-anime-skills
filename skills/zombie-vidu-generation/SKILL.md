@@ -1,6 +1,6 @@
 ---
 name: zombie-vidu-generation
-description: Use when submitting, querying, downloading, or managing Vidu video-generation tasks for AI anime drama production from prompt/storyboard tables. Handles Vidu reference-to-video, image-to-video, text-to-video, first-frame/video workflows, saved-subject material mapping, pre-submit confirmation, batch task logs, status polling, downloads, failed-shot reporting, codec/resolution/model parameters, and safe retry planning. Requires vidu-skills/vidu-cli for actual API execution.
+description: Use when submitting, querying, downloading, or managing Vidu video-generation tasks for AI anime drama production from prompt/storyboard tables. Handles Vidu reference-to-video, image-to-video, text-to-video, first-frame/video workflows, saved-subject material mapping, pre-submit confirmation, prompt provenance logging, batch task logs, status polling, downloads, failed-shot reporting, codec/resolution/model parameters, and safe retry planning. Requires vidu-skills/vidu-cli for actual API execution.
 ---
 
 # Zombie Vidu Generation
@@ -25,7 +25,8 @@ The submit plan must include:
 - transition mode if used,
 - schedule mode if used,
 - output/log path,
-- visible subject/material names that will be sent.
+- visible subject/material names that will be sent,
+- actual prompt text summary or full prompt text for the selected rows.
 
 Do not submit if:
 
@@ -73,10 +74,15 @@ Task logs should preserve enough information to reproduce each generation. Inclu
 
 - `source_prompt_table`
 - `source_row_hash`
+- `prompt_text`
+- `prompt_file`
+- `cli_prompt_arg`
 - `cli_command_or_args`
 - `vidu_cli_version`
 - `material_mapping_source`
 - `submitted_at`
+
+`prompt_text` is the canonical prompt that was sent or intended to be sent. `prompt_file` records a temporary prompt-file path only if one was used. `cli_prompt_arg` records the exact CLI prompt argument form. Do not treat a file-indirection argument as user-visible prompt text.
 
 If a redo task is submitted, preserve original task lineage fields from the redo table.
 
@@ -184,7 +190,7 @@ Use the `视频提示词` exactly as the final prompt unless it violates executi
 
 Before submission, check:
 
-- no analysis labels if the prompt is supposed to be final continuous prompt,
+- the prompt is a final segmented time-coded video prompt, not an unresolved analysis or planning note,
 - no empty prompt,
 - no unsupported audio-only instructions if video has no audio,
 - no `[@name]` without material mapping,
@@ -192,16 +198,21 @@ Before submission, check:
 
 Append negative constraints to the prompt only when the user explicitly wants them embedded. Otherwise leave `负面约束` in the log table and rely on the prompt itself.
 
+Pass the actual prompt text directly to the Vidu CLI by default. Use a temporary prompt file only when command length or encoding makes direct text unsafe, and only after confirming the CLI supports prompt-file indirection. When a prompt file is used, logs must still preserve the full `prompt_text`, plus `prompt_file` and `cli_prompt_arg`.
+
+User-facing submit plans, confirmation prompts, and final summaries must show the actual prompt text or a concise real-text summary. Do not display a local prompt-file argument as a substitute for the prompt.
+
 ## Submit Workflow
 
 1. Read prompt rows for the requested shot range.
 2. Normalize shot IDs and file names, such as `6_1`, `6_2`, or the user's naming convention.
 3. Build material mapping for each row.
 4. Validate route, model, duration, resolution, aspect ratio, codec, transition, material count.
-5. Present submit plan and wait for user confirmation.
-6. Submit one row at a time. Do not hide partial failures.
-7. Write a task log workbook/CSV after each successful submit.
-8. Report task IDs and trace IDs.
+5. Decide direct prompt text versus supported prompt-file indirection, preserving `prompt_text` either way.
+6. Present submit plan and wait for user confirmation.
+7. Submit one row at a time. Do not hide partial failures.
+8. Write a task log workbook/CSV after each successful submit.
+9. Report task IDs and trace IDs.
 
 Recommended task log columns:
 
@@ -219,6 +230,9 @@ Recommended task log columns:
 - `transition`
 - `schedule_mode`
 - `materials`
+- `prompt_text`
+- `prompt_file`
+- `cli_prompt_arg`
 - `prompt`
 - `submit_time`
 - `last_query_time`

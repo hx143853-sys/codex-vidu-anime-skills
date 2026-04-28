@@ -1,4 +1,4 @@
 interface:
   display_name: "Zombie Storyboard Director"
   short_description: "Convert scripts into detailed professional anime storyboard tables."
-  default_prompt: "Convert this AI anime drama script into a detailed professional storyboard table with shot number, duration, shot size, scene, characters, director-grade picture description, dialogue, sound, and notes. Keep one speaker per shot when possible, split long dialogue at natural pauses, and do not generate Vidu prompts or saved-subject tokens."
+  default_prompt: "Convert this AI anime drama script into a detailed professional storyboard table with shot number, duration, shot size, scene, per-shot visible/speaking characters, director-grade picture description, dialogue, sound, and notes. Judge real characters independently for every shot instead of copying a cast list, keep one speaker per shot when possible, split long dialogue at natural pauses, and do not generate Vidu prompts or saved-subject tokens."

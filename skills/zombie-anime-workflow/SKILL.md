@@ -18,7 +18,7 @@ Route work to these skills when available:
 - `zombie-subject-extraction`: subject extraction, subject table, and dubbing dialogue sheet.
 - `zombie-storyboard-director`: script-to-storyboard table.
 - `zombie-frame-grid-planning`: first-frame image prompt and grid storyboard image prompt planning.
-- `zombie-video-prompting`: video prompt planning for multi-reference video, first-frame image-to-video, and grid-image video workflows.
+- `zombie-video-prompting`: subject call planning and video prompt planning for multi-reference video, first-frame image-to-video, and grid-image video workflows.
 - `zombie-vidu-generation`: Vidu task submission, polling, download, naming, and redo management.
 - `zombie-shot-review-redo`: generated-shot review, issue classification, redo prompt rewriting, and redo batch planning.
 
@@ -41,6 +41,8 @@ Before any real generation or file-producing batch, ask the user for confirmatio
 - submitting Vidu tasks,
 - downloading/replacing videos,
 - batch redo operations.
+
+Before final video prompts and before any Vidu submission, require a confirmed `主体调用计划` from `zombie-video-prompting`. The plan must identify confirmed subjects, suspected subjects, excluded subjects, reasoning, and whether user confirmation is needed for each target shot.
 
 For low-risk reading, inspecting, or planning, proceed without asking unless the user told you to pause.
 
@@ -234,8 +236,8 @@ Default order for a new project:
 2. Subject and dialogue extraction: ask before calling `zombie-subject-extraction`.
 3. Storyboard: ask before calling `zombie-storyboard-director`.
 4. First-frame/grid planning: ask before calling `zombie-frame-grid-planning` when the route requires first-frame or grid images.
-5. Video prompting: ask before calling `zombie-video-prompting`.
-6. Vidu generation: ask before calling `zombie-vidu-generation`.
+5. Video prompting: ask before calling `zombie-video-prompting`; first produce and confirm the `主体调用计划`, then write final segmented time-coded prompts.
+6. Vidu generation: ask before calling `zombie-vidu-generation`; proceed only after the subject call plan and final prompt rows are confirmed.
 7. Review and redo: ask which shots need review, then use `zombie-shot-review-redo`; never redo a batch without confirmation.
 
 If the user already has some artifacts, skip completed steps only after confirming they should be reused.
@@ -254,6 +256,12 @@ Good:
 
 ```text
 我已经整理好目标集数前 5 个镜头的 Vidu 提示词。下一步会提交 Vidu 生成任务，参数为 Q2、1080P、H264 Pro、16:9。是否开始提交？
+```
+
+Good:
+
+```text
+我已经整理好目标镜头的主体调用计划：确认调用主体、疑似应调用主体、排除主体和判断原因都列好了。确认后我再生成分段时间轴视频提示词。是否确认这份主体调用计划？
 ```
 
 Bad:
@@ -275,6 +283,7 @@ Never generate without explicit confirmation in these cases:
 - first subject/dialogue workbook for a project,
 - updated subject/dialogue workbook after major script changes,
 - storyboard table export,
+- confirming the subject call plan before final video prompt rows,
 - image generation,
 - Vidu task submission,
 - video download/overwrite,
