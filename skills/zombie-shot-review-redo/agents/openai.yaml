@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zombie Shot Review Redo"
+  short_description: "Review generated shots and plan redos."
+  default_prompt: "Use zombie-shot-review-redo to inspect generated anime drama videos, classify visual issues, rewrite redo prompts, and prepare batch redo lists."

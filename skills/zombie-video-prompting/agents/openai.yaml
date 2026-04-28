@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zombie Video Prompting"
+  short_description: "Convert storyboards into model-ready anime video prompts."
+  default_prompt: "Convert this storyboard into model-ready anime video prompts. Ask or infer the production route, use saved-subject tokens when available, avoid pronouns, keep constraints concise, and do not submit generation tasks."

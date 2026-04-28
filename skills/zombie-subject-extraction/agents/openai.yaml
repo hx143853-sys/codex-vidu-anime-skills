@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zombie Subject Extraction"
+  short_description: "Extract AI drama subjects, prompts, dubbing dialogue, and voice descriptions."
+  default_prompt: "Extract characters, scenes, props, effects, other reusable subjects, and a voice-actor dialogue sheet from this script into a production-ready workbook with multi-form naming, image-generation prompts, role voice descriptions, and VO/OS/SO merged into the base speaker."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zombie Vidu Generation"
+  short_description: "Submit, query, and download Vidu anime drama video tasks safely."
+  default_prompt: "Use zombie-vidu-generation to submit checked storyboard prompt rows to Vidu, track tasks, query status, and download completed videos."
