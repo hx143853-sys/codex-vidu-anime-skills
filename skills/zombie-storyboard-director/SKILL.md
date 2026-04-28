@@ -1,13 +1,13 @@
 ---
 name: zombie-storyboard-director
-description: Use when converting AI anime drama scripts, novels, outlines, or revised chapters into detailed professional storyboard tables. Produces shot-level sheets with shot number, duration, shot size, scene, independently judged visible/speaking characters, director-grade picture descriptions, dialogue, sound, and notes while preserving plot and dialogue. Picture descriptions should include current screen content, composition, shot size, character action, emotion/reaction, scene focus, camera angle/movement, and visual emphasis, but the skill must not create Vidu prompts, dynamic prompt columns, visible-subject mapping columns, saved-subject tokens, or reference-image mappings.
+description: Use when converting AI anime drama scripts, novels, outlines, or revised chapters into detailed professional storyboard tables. Produces shot-level sheets with shot number, duration, shot size, scene, independently judged visible/speaking characters, shootable natural-language picture descriptions, dialogue, sound, and notes while preserving plot and dialogue. Picture descriptions must say who is where, what they do, what expression/posture they show, who or what they look at, and how the camera frames the visible action, but the skill must not create Vidu prompts, dynamic prompt columns, visible-subject mapping columns, saved-subject tokens, or reference-image mappings.
 ---
 
 # Zombie Storyboard Director
 
 Use this skill to convert script text into a detailed professional anime storyboard table. This is the step after subject/dialogue extraction and before video prompting.
 
-The output is a director storyboard, not a Vidu prompt plan. It may describe composition, staging, camera angle, simple camera movement, emotion, and visual exaggeration, but it must not use Vidu saved-subject tokens or video-generation parameter language.
+The output is a director storyboard, not a Vidu prompt plan. It must describe shootable screen content in natural language: who is where, what they do, what expression/posture they show, who or what they look at, and how the camera frames the visible action. It may use composition, staging, camera angle, simple camera movement, emotion, and visual exaggeration, but it must not use Vidu saved-subject tokens or video-generation parameter language.
 
 ## Inputs
 
@@ -123,6 +123,8 @@ Example:
 1-2 日 内 住宅客厅
 ```
 
+Keep scene headings in the `场景` column. In `画面描述`, convert scene headings into natural location wording such as `住宅客厅中`, `夜晚别墅客厅里`, or `白天小区门口`. Do not write scene-code wording such as `角色A在1-2日内说话`.
+
 ### 出场角色
 
 List only characters that appear or speak in the shot.
@@ -137,23 +139,39 @@ If a character is only mentioned by dialogue and is not visible or speaking in t
 
 ### 画面描述
 
-This is the most important field. It must read like a professional director's storyboard description, not a plot summary.
+This is the most important field. It must read like shootable screen direction for a video producer, not a plot summary, analysis note, or abstract director commentary.
 
-Write what the current screen should show according to the script. Every `画面描述` must include the current visible content, main subject action, emotion or reaction, scene focus, and basic composition/camera information. Include:
+Write in natural language. A person who has not read the script should still know what image to create from this field. Every `画面描述` must answer these concrete questions inside the sentence:
 
-- what event is happening,
-- who is doing what,
-- what object, monster, threat, UI, or result appears,
-- what emotional state or story beat is visible,
-- what changes from the previous shot.
-- basic composition and visual focus,
-- character action and reaction,
-- camera angle or simple camera movement when useful,
-- anime/film/3D/CG-style exaggeration when it strengthens the original beat.
+- which named character or visible subject is on screen,
+- where the subject is in natural location wording, not scene-code wording,
+- where the subject is positioned in the frame or environment,
+- what the subject is doing with body, hands, face, or gaze,
+- what expression or posture is visible,
+- who or what the subject looks at, faces, touches, blocks, attacks, avoids, or reacts to,
+- what important object, monster, UI, threat, doorway, window, furniture, weapon, or environmental detail is visible,
+- what shot size, angle, camera movement, or composition makes the moment stronger.
+
+Use exact character names or exact subject names. Do not use vague pronouns or placeholders such as `其`, `他`, `她`, `它`, `对方`, `听者`, `此人`, `那人`, `主角`, `角色`, `人物`, or `某人` when a real name is known.
+
+Professional camera terms are allowed only when they are attached to visible action. `近景`, `侧脸特写`, `推近`, `背景虚化`, `压迫感构图`, and `反应特写` are useful only if the sentence also says who is being filmed, where that person is, what that person is doing, and what the viewer sees around them.
+
+Do not write abstract intention phrases as the picture description. Avoid wording such as:
+
+- `镜头抓住其表情、姿态和听者反应`
+- `背景虚化以突出这句台词的情绪重量`
+- `画面先营造误会感`
+- `埋下反转`
+- `物资危机被揭开`
+- `强化张力`
+- `延续上一镜头氛围`
+- `推动情绪`
+
+If the scene needs those ideas, translate them into visible details: exact faces, posture, distance, gaze, object placement, lighting, foreground/background, and camera movement.
+
+Maintain continuity through visible state, not meta-reference. Do not write `接上一镜头`, `延续前一镜头情绪`, or `参考上一镜头`. Instead restate the current visible situation, such as the same room, the same doorway, a character still holding a door handle, a toppled chair remaining in the foreground, or a character backing away from the same threat.
 
 Do not write `画面描述` as a rewritten plot sentence. It should be concrete enough that a later video-prompting step can infer the real visible subjects, opening frame, motion, camera path, and ending state without guessing.
-
-The description can include professional language such as `低角度`, `俯拍`, `推近`, `拉远`, `摇镜`, `快速切入`, `压迫感构图`, `反应特写`, `背景虚化`, and `动作夸张线`.
 
 Still keep this as a storyboard, not a final AI video prompt. Do not include:
 
@@ -170,13 +188,25 @@ Those are handled later by `zombie-video-prompting`.
 Good `画面描述`:
 
 ```text
-低角度近景，角色B靠在狭窄室内角落，脸颊泛红又惊慌，身体紧张后缩；画面先营造误会感，再用她慌乱阻止角色C靠近危险物的台词埋下反转。
+近景，角色A站在别墅客厅沙发旁，侧脸被窗外冷光照亮，角色A攥紧衣袖看向门口的角色B说话；镜头从角色A肩后缓慢推到侧脸特写，背景里的角色B停在门边皱眉不动，茶几和散落文件压在前景，门框把角色B框在画面后景。
 ```
 
 Good:
 
 ```text
-冰箱门被角色A拉开，冷白灯光照出空荡荡的隔层，只剩少量食物孤零零摆在角落；镜头从角色A皱眉的侧脸切到冰箱内部特写，物资危机被直接揭开。
+中景，角色A站在厨房冰箱前拉开冰箱门，角色A一手扶着门沿，眉头皱紧看向空荡隔层；冷白冰箱灯照出角落里剩下的半瓶水和两包食物，镜头从角色A侧脸下移到冰箱内部，最后停在空隔板上。
+```
+
+Bad:
+
+```text
+近景，角色A在1-2日内说话，镜头抓住其表情、姿态和听者反应，背景虚化以突出这句台词的情绪重量。
+```
+
+Bad:
+
+```text
+角色A情绪复杂，画面强化张力，延续上一镜头氛围。
 ```
 
 Bad:
@@ -288,6 +318,8 @@ Use anime, film, 3D, or CG-style visual exaggeration only to strengthen the exis
 - use reaction shots after important lines,
 - use environmental details already implied by the script.
 
+Visual strengthening must remain shootable. Replace abstract claims with visible exaggeration: a tighter close-up, stronger light/shadow on a named face, a hand gripping fabric harder, a chair between two people, a door crack narrowing the frame, or a prop placed in the foreground.
+
 Do not add new events, new characters, new props, or new dialogue.
 
 ## Workbook Structure
@@ -321,7 +353,11 @@ Before finalizing, verify:
 - One shot usually has one speaker and about 20 Chinese characters or less of dialogue.
 - `出场角色` is judged per shot and does not mechanically repeat previous rows or the whole cast.
 - The script's plot order is preserved.
-- `画面描述` is detailed and director-grade, including current image content, subject action, emotion/reaction, scene focus, composition, and camera information when useful.
+- `画面描述` is shootable natural language: a video producer can tell who is where, what they do, what they feel visibly, who or what they look at, and how the camera frames it.
+- `画面描述` uses exact names or exact subjects, not vague pronouns such as `其`, `他`, `她`, `对方`, or `听者`.
+- `画面描述` converts scene headings into natural locations and does not contain wording like `在1-2日内`.
+- Camera or director terms in `画面描述` are tied to concrete visible people, actions, objects, and frame positions.
+- `画面描述` does not use abstract commentary such as `情绪重量`, `强化张力`, `埋下反转`, `推动情绪`, or `延续上一镜头氛围`.
 - `画面描述` does not contain Vidu prompt constraints, saved-subject mappings, or quality-word boilerplate.
 - The storyboard is detailed enough for later prompt generation but not padded with invented story content.
 
