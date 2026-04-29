@@ -1,4 +1,4 @@
 interface:
   display_name: "Zombie Frame Grid Planning"
   short_description: "Plan first-frame and grid image prompts."
-  default_prompt: "Use zombie-frame-grid-planning to prepare first-frame image prompts or grid storyboard prompts from AI drama storyboard rows before video prompting or generation."
+  default_prompt: "Use zombie-frame-grid-planning to prepare first-frame image prompts or grid storyboard prompts from AI drama storyboard rows before video prompting or generation. Put Vidu saved-subject chips inline where subjects appear and make spatial relationships explicit."

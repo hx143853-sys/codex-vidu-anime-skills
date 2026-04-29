@@ -237,7 +237,7 @@ Default order for a new project:
 3. Storyboard: ask before calling `zombie-storyboard-director`.
 4. First-frame/grid planning: ask before calling `zombie-frame-grid-planning` when the route requires first-frame or grid images.
 5. Video prompting: ask before calling `zombie-video-prompting`; first produce and confirm the `主体调用计划`, then write final segmented time-coded prompts.
-6. Vidu generation: ask before calling `zombie-vidu-generation`; proceed only after the subject call plan and final prompt rows are confirmed.
+6. Vidu generation: ask before calling `zombie-vidu-generation`; proceed only after the subject call plan and final prompt rows are confirmed, and require a Vidu account subject check before submission.
 7. Review and redo: ask which shots need review, then use `zombie-shot-review-redo`; never redo a batch without confirmation.
 
 If the user already has some artifacts, skip completed steps only after confirming they should be reused.
@@ -255,7 +255,7 @@ Good:
 Good:
 
 ```text
-我已经整理好目标集数前 5 个镜头的 Vidu 提示词。下一步会提交 Vidu 生成任务，参数为 Q2、1080P、H264 Pro、16:9。是否开始提交？
+我已经整理好目标集数前 5 个镜头的 Vidu 提示词。下一步会先检查绑定 Vidu 账号是否已有对应主体，缺失主体会请你提供图片并确认创建；主体齐全后再按 Q2、1080P、H264_PRO、16:9 提交。是否开始提交前检查？
 ```
 
 Good:

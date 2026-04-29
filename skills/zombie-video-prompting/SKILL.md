@@ -1,6 +1,6 @@
 ---
 name: zombie-video-prompting
-description: Use when converting AI anime drama storyboards, scripts, subject tables, material tables, first-frame images, grid storyboards, or shot lists into high-quality AI video dynamic prompts. Supports multi-image/reference-to-video, first-frame image-to-video, single-image-to-video, grid-image-to-video, and text-to-video workflows; builds a pre-generation subject call plan, then per-shot prompt tables with inline Vidu saved-subject tokens, subject/material mapping, segmented time-coded motion, camera movement, atmosphere continuity, dialogue mouth-control, concise constraints, and quality checks. Does not submit Vidu tasks, upload materials, download videos, or generate images/videos.
+description: Use when converting AI anime drama storyboards, scripts, subject tables, material tables, first-frame images, grid storyboards, or shot lists into high-quality AI video dynamic prompts. Supports multi-image/reference-to-video, first-frame image-to-video, single-image-to-video, grid-image-to-video, and text-to-video workflows; builds a pre-generation subject call plan, then per-shot prompt tables with inline Vidu saved-subject/chip references, subject/material mapping, segmented time-coded motion, explicit spatial relationships, camera movement, atmosphere continuity, dialogue mouth-control, concise constraints, and quality checks. Does not submit Vidu tasks, upload materials, download videos, or generate images/videos.
 ---
 
 # Zombie Video Prompting
@@ -125,12 +125,14 @@ In `参考主体/素材`, use a parseable list, not prose.
 
 Preferred formats:
 
-- saved subject: `[@角色A]=角色A:element_id:version`
+- saved subject: `<Vidu主体引用>=真实元素名:element_id:version`
 - local image: `角色A=/absolute/path/to/character-a.png`
 - missing: `角色A=缺失`
 - text-only: `角色A=文本描述`
 
-Every `[@name]` token in `视频提示词` must appear in `参考主体/素材`. If a token appears in the prompt but no matching material mapping exists, mark the row `不可提交`.
+Every Vidu subject reference used in `视频提示词` must appear in `参考主体/素材`. If a subject reference appears in the prompt but no matching material mapping exists, mark the row `不可提交`.
+
+Use the exact subject reference syntax required by the current Vidu tool. In the Vidu web UI this may be a blue `@真实元素名` chip; in current `vidu-cli` prompt text the documented plain-text form is `[@真实元素名]`, paired with `--material "真实元素名:id:version"`. Do not output placeholder names such as `@主体名`, `[@name]`, or `[@角色A]` in a real prompt unless the saved element is literally named that.
 
 ## Handoff To Generation
 
@@ -173,7 +175,7 @@ Write every final `视频提示词` as a segmented time-coded dynamic prompt, no
 The required structure is:
 
 ```text
-<style + genre + scene mood + visible environment>. 保持同一<saved subject tokens / subject names and key identity anchors>，主体一致性强。
+<style + genre + scene mood + visible environment with inline saved scene token when available>. 保持同一<saved subject tokens / subject names and key identity anchors>，主体一致性强。
 0-X秒：<concrete visible first beat with exact framing, subject position, gaze, action, camera movement, environment/effect motion, and beat ending state>.
 X-Y秒：<concrete visible second beat with motion change, camera path, subject action/reaction, and beat ending state>.
 <final quality words>.
@@ -184,9 +186,9 @@ Do not output analysis labels inside the final prompt unless the user explicitly
 The final prompt must be directly usable as a video-model prompt. It should read like the user's example:
 
 ```text
-3D动漫电影风格，科幻机甲大战怪兽，黄昏末日城市废墟，压迫感强。保持同一台银黑色巨型未来机甲、同一名白发少女驾驶员、同一只黑色红光巨型怪兽，主体一致性强。
-0-2秒：超远景建立镜头，机甲站在画面左侧，怪兽压在右侧废墟后方，镜头低机位缓慢推进，烟尘向两侧翻滚，结束时双方进入对峙构图。
-2-4秒：切入驾驶舱特写，白发少女握紧操纵杆抬眼看向前方警报光，镜头轻微震动，结束时她的眼神收紧。
+3D动漫电影风格，科幻机甲大战怪兽，黄昏末日[@城市废墟]里烟尘压低，压迫感强。保持同一[@银黑色巨型未来机甲]、同一[@白发少女驾驶员]、同一[@黑色红光巨型怪兽]，主体一致性强。
+0-2秒：超远景从废墟街道低机位缓慢推进，[@银黑色巨型未来机甲]站在画面左侧前景，[@黑色红光巨型怪兽]压在右侧楼体残骸后方，双方隔着碎裂街道对峙，烟尘向两侧翻滚，结束时两个主体都停在同一条街道轴线上。
+2-4秒：镜头切入驾驶舱特写，[@白发少女驾驶员]坐在驾驶座中央，双手握紧操纵杆，抬眼看向前方红色警报光和远处怪兽投影，镜头轻微震动，结束时[@白发少女驾驶员]的眼神收紧。
 电影级构图，动态镜头，主体一致性强，动作连贯，光影层次清晰。
 ```
 
@@ -201,6 +203,8 @@ Rules for this segmented prompt:
 7. If the storyboard uses sound-first or black-screen narration, convert it into a visible silent-video equivalent. Do not rely on hearing sound. Use visual suspense such as dark frame fade-in, trembling hand, mouth opening, door crack, shadow movement, subtitle-free panic expression, or a silent scream.
 8. Do not include full dialogue unless the user needs lip-sync. If dialogue exists, describe visible mouth movement and speaker only: `[@角色B]嘴唇颤抖地说话，非说话角色不张口`.
 9. Put negative constraints in the `负面约束` column, not inside the final prompt, unless visually necessary.
+
+Do not append saved subjects as a loose list at the end of the prompt. A Vidu saved subject must appear inline exactly where that subject is visible or referenced in the action. For example, write `[@角色A]半蹲在[@卧室场景]窗边，透过窗户看向远处[@便利店门口]` instead of writing a normal prompt and then adding `参考主体：[@角色A]、[@卧室场景]、[@便利店门口]`.
 
 Keep prompt length practical:
 
@@ -307,6 +311,7 @@ For each shot, derive the video prompt from the script and storyboard:
 
 - `镜头目的`: environment setup, suspense, reaction, action escalation, emotional turn, reveal, aftermath.
 - `主体优先级`: main visual subject versus background/reaction subjects.
+- `空间关系`: camera position, subject position, target position, foreground/midground/background, distance, occlusion, and line of sight.
 - `起始构图`: subject placement, framing, pose, and gaze target.
 - `动作路径`: where the subject moves from/to, speed, force, and emotional change.
 - `镜头路径`: camera follows, pushes, pulls, pans, tilts, tracks, or holds.
@@ -320,20 +325,34 @@ Do not invent new plot, new dialogue, or new visible subjects unless the user as
 If a subject is a Vidu saved subject, both conditions must be true in the later generation step:
 
 - CLI/API material includes the subject, such as `--material "name:id:version"`.
-- Prompt text uses the exact inline token, such as `[@name]`.
+- Prompt text uses the exact Vidu inline subject reference in the body.
 
-In this skill, write the prompt body with inline tokens whenever saved subjects are known or assumed.
+In this skill, write the prompt body with Vidu subject references whenever saved subjects are known or assumed. Use the exact reference format exposed by the current Vidu tool: Vidu UI may render a blue `@真实元素名` chip, while current `vidu-cli` documentation uses `[@真实元素名]` in plain text. The skill examples use placeholders only; real outputs must use actual saved element names from the bound Vidu account.
+
+Use inline subject tokens every time a saved subject is materially involved in the shot: the location/scene token, observing character, observed target, monster, prop, vehicle, weapon, or important environment anchor. Do not put tokens only in the consistency sentence or at the end of the prompt.
 
 Correct:
 
 ```text
-[@角色B] 站在 [@场景A] 门口，双手抓紧外套边缘；[@角色A] 站在室内阴影中，侧身看向 [@角色B]。
+[@角色B]站在[@场景A]门口，双手抓紧外套边缘；[@角色A]站在室内阴影中，侧身看向[@角色B]。
+```
+
+Correct:
+
+```text
+0-2秒：门后视角从[@卧室场景]门缝缓慢推进，[@角色A]半蹲在窗户右侧阴影里，身体压低，侧脸贴近窗帘边缘，视线穿过窗户看向楼下远处的[@便利店门口]。
 ```
 
 Wrong:
 
 ```text
 角色B站在场景A门口，她看着角色A。
+```
+
+Wrong:
+
+```text
+角色A半蹲在窗边看向远处便利店门口。参考主体：[@角色A]、[@卧室场景]、[@便利店门口]。
 ```
 
 Do not write identity explanation sentences:
@@ -394,6 +413,19 @@ Use exact gaze targets:
 - `[@角色A] 看向画面右侧的门口`
 
 For multi-character shots, state foreground/background or left/right only when it prevents identity fusion or action confusion.
+
+## Spatial Relationship Rules
+
+Every prompt with observation, hiding, pursuit, standoff, or multi-subject action must make the spatial logic explicit enough for generation:
+
+- camera viewpoint: door gap, window side, over-the-shoulder, high angle, low angle, hallway looking inward, room looking outward,
+- observing subject location and posture: crouching by the window, standing behind a sofa, leaning against the door, hiding in foreground shadow,
+- target location: downstairs street, far background entrance, left side doorway, behind the counter, outside the window,
+- line of sight: through window glass, past the door crack, over a shoulder, across the room, around an obstacle,
+- depth relation: foreground / midground / background, near / far, upstairs / downstairs, inside / outside,
+- occlusion or frame anchors: door frame, curtain edge, window frame, shelf, car body, broken wall.
+
+Avoid vague wording such as `看向远处`, `观察外面`, or `空间压迫感强` unless the same sentence states exactly where the subject is, what the subject looks through or past, and what visible target is in which part of the frame.
 
 ## Camera Language
 
@@ -524,7 +556,9 @@ Before finalizing, verify:
 - every time-coded segment includes visible image, subject, camera movement, action change, and ending state,
 - prompt includes camera movement,
 - prompt includes environmental/effect movement when appropriate,
-- prompt uses inline `[@name]` tokens for saved subjects when available,
+- prompt uses exact Vidu inline subject references for saved subjects when available,
+- saved-subject tokens appear inline at the visible action/location, not only in a suffix list or consistency sentence,
+- prompt explains spatial relationships clearly: where the camera is, where the main subject is, what the subject sees or faces, and where the target is in frame depth,
 - prompt does not mix token subject names with pronouns,
 - no identity explanation sentence like `[@角色] 是...参考主体`,
 - characters do not unintentionally look at camera,

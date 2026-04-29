@@ -26,13 +26,15 @@ The submit plan must include:
 - schedule mode if used,
 - output/log path,
 - visible subject/material names that will be sent,
+- Vidu account subject check results: existing elements, newly created elements, missing subjects, and image requests,
 - actual prompt text summary or full prompt text for the selected rows.
 
 Do not submit if:
 
 - the user has not explicitly confirmed,
 - a required reference subject/material is missing,
-- prompt contains `[@name]` but no matching Vidu material mapping exists for final generation,
+- a required saved subject does not exist in the bound Vidu account and has not been created or replaced by a user-approved raw image,
+- prompt contains a Vidu subject reference but no matching Vidu material mapping exists for final generation,
 - combined `--image` + `--material` count is outside 1-7 for `character2video`,
 - duration is invalid for the selected model,
 - the user asks for a route but required inputs are missing.
@@ -49,6 +51,8 @@ Before asking for final submission confirmation, produce a validation summary:
 - rows blocked,
 - blocked reasons:
   - missing prompt,
+  - saved subject not found in the bound Vidu account,
+  - user image needed for subject creation,
   - missing material mapping,
   - token/material mismatch,
   - invalid duration for model,
@@ -94,6 +98,7 @@ Read as much as available:
 - storyboard table,
 - script context when scene/subject ambiguity exists,
 - material/subject table or Vidu element list,
+- bound Vidu account element list or `vidu-cli element list` access,
 - project output folder,
 - requested episode/chapter and shot range,
 - requested naming pattern,
@@ -133,7 +138,7 @@ Default only when the user has not specified:
 
 - aspect ratio: `16:9`
 - resolution: `1080p`
-- codec: `h264`
+- codec: `h264_pro` for user-facing `H264_PRO`
 - movement amplitude: `auto`
 - sample count: `1`
 - schedule mode: omit unless the user specifies `claw_pass` or `normal`; Vidu CLI can auto-detect
@@ -154,7 +159,8 @@ Important limits:
 
 Project phrase mapping:
 
-- User says `H264 Pro` or `H264PRO`: use `--codec h264`; if the CLI supports only `h264`, do not invent `h264pro`.
+- User says `H264_PRO`, `H264 Pro`, or `H264PRO`: use user-facing `H264_PRO` and CLI/API value `--codec h264_pro`. Do not downgrade this to `h264`.
+- User says plain `H264`: use `--codec h264`.
 - User says `电影大片`: prefer `--transition pro` for Q3/video routes where transition is allowed or required.
 - User says `Q2`: use model `3.1` and do not pass `--transition` for `character2video`.
 - User says `Q3`: use model `3.2` and pass `--transition pro` unless the user asks for speed.
@@ -163,10 +169,13 @@ Project phrase mapping:
 
 For saved Vidu subjects:
 
-1. List or load material mappings as `name:id:version`.
-2. Match each prompt token `[@name]` to exactly one material mapping.
-3. Pass the matching mapping via repeated `--material "name:id:version"`.
-4. Keep the token in the prompt body.
+1. Extract every required saved subject from `参考主体/素材` and every Vidu subject reference in the prompt.
+2. Check the bound Vidu account for each subject before submission, using existing mappings or `vidu-cli element list --keyword "<name>"`.
+3. Match each prompt subject reference to exactly one material mapping in the form `name:id:version`.
+4. Pass the matching mapping via repeated `--material "name:id:version"`.
+5. Keep the Vidu subject reference inline in the prompt body at the point where the subject appears.
+
+Use the exact subject reference syntax required by the current Vidu tool. In the Vidu web UI this may be a blue `@真实元素名` chip; in current `vidu-cli` prompt text the documented plain-text form is `[@真实元素名]`, paired with `--material "真实元素名:id:version"`. Do not submit placeholder references such as `@主体名`, `[@name]`, or `[@角色A]` unless the saved element is literally named that.
 
 If material names in the table are display names only, run:
 
@@ -176,13 +185,20 @@ vidu-cli element list --keyword "<name>"
 
 If multiple elements match, stop and ask which one to use.
 
-If no element matches, stop and report missing subjects. Do not silently remove the token or replace with text-only generation unless the user explicitly allows it.
+If no element matches, stop and report missing subjects. Ask the user to provide 1-3 reference images for each missing saved subject. After the user provides images and confirms creation, create the subject with:
+
+```bash
+vidu-cli element create --name "<name>" --image "<image1>" [--image "<image2>" --image "<image3>"]
+```
+
+Record the returned `id` and `version`, update the material mapping to `name:id:version`, and keep the real Vidu subject reference inline in the prompt. Do not silently remove the reference, replace it with plain text, or submit as text-only generation unless the user explicitly approves that fallback.
 
 For raw images:
 
 - pass each local path with repeated `--image "<path>"`,
 - total `--image` + `--material` must stay within Vidu limits,
-- do not upload or create persistent Vidu elements unless the user asks.
+- for this drama workflow, prefer creating a reusable saved subject when the same character/scene/prop will recur across shots,
+- do not upload or create persistent Vidu elements unless the user confirms the subject creation scope.
 
 ## Prompt Handling
 
@@ -193,7 +209,8 @@ Before submission, check:
 - the prompt is a final segmented time-coded video prompt, not an unresolved analysis or planning note,
 - no empty prompt,
 - no unsupported audio-only instructions if video has no audio,
-- no `[@name]` without material mapping,
+- no Vidu subject reference without material mapping,
+- no saved subject appears only in a trailing reference list; required saved subjects should appear inline where they are visible or referenced,
 - no obvious identity mismatch between `参考主体/素材` and prompt tokens.
 
 Append negative constraints to the prompt only when the user explicitly wants them embedded. Otherwise leave `负面约束` in the log table and rely on the prompt itself.
@@ -206,13 +223,15 @@ User-facing submit plans, confirmation prompts, and final summaries must show th
 
 1. Read prompt rows for the requested shot range.
 2. Normalize shot IDs and file names, such as `6_1`, `6_2`, or the user's naming convention.
-3. Build material mapping for each row.
-4. Validate route, model, duration, resolution, aspect ratio, codec, transition, material count.
-5. Decide direct prompt text versus supported prompt-file indirection, preserving `prompt_text` either way.
-6. Present submit plan and wait for user confirmation.
-7. Submit one row at a time. Do not hide partial failures.
-8. Write a task log workbook/CSV after each successful submit.
-9. Report task IDs and trace IDs.
+3. Check the bound Vidu account for every required saved subject.
+4. If a subject is missing, ask for 1-3 images, create the saved subject only after confirmation, and update the material mapping.
+5. Build material mapping for each row.
+6. Validate route, model, duration, resolution, aspect ratio, codec, transition, material count.
+7. Decide direct prompt text versus supported prompt-file indirection, preserving `prompt_text` either way.
+8. Present submit plan and wait for user confirmation.
+9. Submit one row at a time. Do not hide partial failures.
+10. Write a task log workbook/CSV after each successful submit.
+11. Report task IDs and trace IDs.
 
 Recommended task log columns:
 
@@ -230,6 +249,8 @@ Recommended task log columns:
 - `transition`
 - `schedule_mode`
 - `materials`
+- `vidu_account_subject_check`
+- `created_elements`
 - `prompt_text`
 - `prompt_file`
 - `cli_prompt_arg`
@@ -248,14 +269,14 @@ Reference-to-video with saved subjects:
 ```bash
 vidu-cli task submit `
   --type character2video `
-  --prompt "<final prompt with [@name] tokens>" `
+  --prompt "<final prompt with exact Vidu subject references>" `
   --material "name:id:version" `
   --duration 5 `
   --model-version 3.2 `
   --aspect-ratio 16:9 `
   --transition pro `
   --resolution 1080p `
-  --codec h264 `
+  --codec h264_pro `
   --movement-amplitude auto
 ```
 
@@ -270,7 +291,7 @@ vidu-cli task submit `
   --model-version 3.1 `
   --aspect-ratio 16:9 `
   --resolution 1080p `
-  --codec h264 `
+  --codec h264_pro `
   --movement-amplitude auto
 ```
 
@@ -334,8 +355,9 @@ Before submit, say something like:
 
 ```text
 准备提交目标章节 1-5 镜头到 Vidu：
-模型 Q2 -> 3.1，16:9，1080p，H264，character2video，多图参考生视频。
-将使用主体：[@场景A]、[@角色A]、[@角色B] ...
+模型 Q2 -> 3.1，16:9，1080p，H264_PRO，character2video，多图参考生视频。
+编码 H264_PRO -> CLI codec h264_pro。
+已检查 Vidu 账号主体：<真实场景主体引用>、<真实角色主体引用> 均有对应 element。
 预计提交 5 个任务，任务日志写入 ...
 请确认“开始提交”后我再执行。
 ```
@@ -357,6 +379,7 @@ After submit, report:
 - submitted shot count,
 - task IDs,
 - task log path,
+- any newly created Vidu elements,
 - any failures with exact error fields.
 
 After query/download, report:

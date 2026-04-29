@@ -1,4 +1,4 @@
 interface:
   display_name: "Zombie Vidu Generation"
   short_description: "Submit, query, and download Vidu anime drama video tasks safely."
-  default_prompt: "Use zombie-vidu-generation to submit checked storyboard prompt rows to Vidu, track tasks, query status, and download completed videos. Show real prompt text or summaries in submit plans, prefer direct prompt text, and log prompt_text, prompt_file, and cli_prompt_arg separately."
+  default_prompt: "Use zombie-vidu-generation to submit checked storyboard prompt rows to Vidu, track tasks, query status, and download completed videos. Before submit, check the bound Vidu account for required saved subjects, request images and create missing elements after confirmation, use H264_PRO as h264_pro, show real prompt text or summaries, and log prompt_text, prompt_file, and cli_prompt_arg separately."

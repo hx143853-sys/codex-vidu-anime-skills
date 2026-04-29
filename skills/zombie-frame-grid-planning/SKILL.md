@@ -99,12 +99,14 @@ In `参考主体/素材`, use a parseable list, not prose.
 
 Preferred formats:
 
-- saved subject: `[@角色A]=角色A:element_id:version`
+- saved subject: `<Vidu主体引用>=真实元素名:element_id:version`
 - local image: `角色A=/absolute/path/to/character-a.png`
 - missing: `角色A=缺失`
 - text-only: `角色A=文本描述`
 
 The later video-prompting and generation skills must be able to verify every visible subject from this cell.
+
+Use the exact subject reference syntax required by the current Vidu tool. In the Vidu web UI this may be a blue `@真实元素名` chip; in current `vidu-cli` prompt text the documented plain-text form is `[@真实元素名]`, paired with `--material "真实元素名:id:version"`. Do not output placeholder names such as `@主体名`, `[@name]`, or `[@角色A]` in a real prompt unless the saved element is literally named that.
 
 ## Handoff To Video Prompting
 
@@ -130,9 +132,10 @@ The prompt must include:
 
 - style and genre,
 - exact scene and atmosphere from script context,
-- visible subjects using inline `[@name]` tokens when saved subjects are available,
+- visible subjects using exact Vidu inline subject references when saved subjects are available,
 - framing and camera angle,
 - subject position and gaze target,
+- explicit spatial relationship: camera viewpoint, subject position, target position, foreground/midground/background, and line of sight,
 - pose and key expression,
 - important props/effects/UI,
 - lighting and environment details,
@@ -151,6 +154,7 @@ Avoid:
 
 - vague composition such as `一个人在房间里`,
 - pure mood with no subject positions,
+- saved subject tokens placed only at the end instead of inline where the subject appears,
 - characters staring at camera unless POV/direct address is intended,
 - audio-only wording such as `听到`, `声音先行`,
 - future-motion wording such as `即将移动`, unless it is visible in pose.
@@ -213,7 +217,9 @@ Write as one continuous image prompt:
 
 ## Subject Token Rules
 
-If a subject is a saved Vidu element, use inline `[@name]` in the prompt and include it in `参考主体/素材`.
+If a subject is a saved Vidu element, use the exact Vidu inline subject reference in the prompt and include it in `参考主体/素材`.
+
+Place the subject reference where the subject is visually described. Do not write a normal prompt and append `参考主体：[@角色A]、[@场景A]` at the end. If the scene, character, prop, monster, or location is a saved subject, use its real Vidu reference directly in the sentence where it appears.
 
 Do not write identity explanation sentences:
 
