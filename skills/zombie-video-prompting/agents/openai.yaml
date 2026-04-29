@@ -1,4 +1,4 @@
 interface:
   display_name: "Zombie Video Prompting"
   short_description: "Convert storyboards into model-ready anime video prompts."
-  default_prompt: "Convert this storyboard into model-ready anime video prompts. First build a per-shot subject call plan and wait for confirmation, then write segmented time-coded prompts with Vidu saved-subject chips inline where subjects appear, explicit spatial relationships, no trailing subject lists, no pronouns or unresolved decision words, concise constraints, and no generation submission."
+  default_prompt: "Convert this storyboard into model-ready anime video prompts. First read the full episode/script/storyboard context, build a subject call plan, then write segmented prompts with a complete first-frame line, exact Vidu subject references inline, explicit spatial relationships, entry/exit motion, rich but relevant camera/anime direction, concise constraints, and no generation submission."

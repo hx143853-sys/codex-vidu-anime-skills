@@ -128,6 +128,8 @@ Do not assume that a planning prompt means the image was generated. Only mark `å
 
 A first-frame prompt describes one still image only. Do not include video timeline language such as `0-2ç§’`.
 
+Do not design a first frame from one storyboard row alone when script/storyboard context is available. First understand the episode/scene geography, adjacent shots, character positions, and the real object or threat being watched. If a sparse row says a character watches outside, but the script establishes the target is downstairs at a store entrance, the first-frame prompt must show that line of sight and target position instead of inventing an interior threat.
+
 The prompt must include:
 
 - style and genre,
@@ -136,6 +138,7 @@ The prompt must include:
 - framing and camera angle,
 - subject position and gaze target,
 - explicit spatial relationship: camera viewpoint, subject position, target position, foreground/midground/background, and line of sight,
+- opening-frame logic: what the viewer sees before motion begins and why this frame supports the next video prompt,
 - pose and key expression,
 - important props/effects/UI,
 - lighting and environment details,

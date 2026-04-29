@@ -236,7 +236,7 @@ Default order for a new project:
 2. Subject and dialogue extraction: ask before calling `zombie-subject-extraction`.
 3. Storyboard: ask before calling `zombie-storyboard-director`.
 4. First-frame/grid planning: ask before calling `zombie-frame-grid-planning` when the route requires first-frame or grid images.
-5. Video prompting: ask before calling `zombie-video-prompting`; first produce and confirm the `主体调用计划`, then write final segmented time-coded prompts.
+5. Video prompting: ask before calling `zombie-video-prompting`; first read the full episode/script/storyboard context, produce and confirm the `主体调用计划`, then write final segmented time-coded prompts with `首帧：`, spatial logic, and shot-to-shot continuity.
 6. Vidu generation: ask before calling `zombie-vidu-generation`; proceed only after the subject call plan and final prompt rows are confirmed, and require a Vidu account subject check before submission.
 7. Review and redo: ask which shots need review, then use `zombie-shot-review-redo`; never redo a batch without confirmation.
 
